@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.base580.backend.service.DuplicateTariffException;
 import com.base580.backend.service.TicketNotFoundException;
+import com.base580.backend.service.WorkbookConflictException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -16,6 +17,12 @@ public class ApiExceptionHandler {
 	@ExceptionHandler(DuplicateTariffException.class)
 	public ResponseEntity<Map<String, String>> duplicate(DuplicateTariffException exception) {
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", exception.getMessage()));
+	}
+
+	@ExceptionHandler(WorkbookConflictException.class)
+	public ResponseEntity<Map<String, Object>> workbookConflict(WorkbookConflictException exception) {
+		Map<String, Object> body = Map.of("error", exception.getMessage(), "actual", exception.getActual());
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
 	}
 
 	@ExceptionHandler(TicketNotFoundException.class)

@@ -7,6 +7,8 @@ import java.util.Map;
 public class TicketWorkbookState {
 
 	private Map<String, String> capturas = new LinkedHashMap<>();
+	private Map<String, String> formatos = new LinkedHashMap<>();
+	private String estructura;
 	private Long version;
 	private String actualizado;
 
@@ -25,6 +27,22 @@ public class TicketWorkbookState {
 
 	public void setCapturas(Map<String, String> capturas) {
 		this.capturas = capturas;
+	}
+
+	public Map<String, String> getFormatos() {
+		return formatos;
+	}
+
+	public void setFormatos(Map<String, String> formatos) {
+		this.formatos = formatos;
+	}
+
+	public String getEstructura() {
+		return estructura;
+	}
+
+	public void setEstructura(String estructura) {
+		this.estructura = estructura;
 	}
 
 	/** Versión del documento; null cuando aún no se ha guardado nada. */

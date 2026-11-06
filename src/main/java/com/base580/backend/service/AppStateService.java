@@ -3,8 +3,11 @@ package com.base580.backend.service;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.base580.backend.model.AppStateDocument;
 import com.base580.backend.model.AppStateDocument.AuditEntry;
@@ -33,6 +36,20 @@ public class AppStateService {
 		next.setId("default");
 		next.setUpdatedAt(OffsetDateTime.now().toString());
 		return repository.save(next);
+	}
+
+	public synchronized AppStateDocument saveIfCurrent(AppStateDocument state, String expectedVersion) {
+		if (expectedVersion == null || expectedVersion.isBlank()) {
+			throw new ResponseStatusException(HttpStatus.PRECONDITION_REQUIRED, "Se requiere la versión cargada");
+		}
+		if (expectedVersion.length() >= 2 && expectedVersion.startsWith("\"") && expectedVersion.endsWith("\"")) {
+			expectedVersion = expectedVersion.substring(1, expectedVersion.length() - 1);
+		}
+		String currentVersion = current().getUpdatedAt();
+		if (!Objects.equals(expectedVersion, currentVersion == null ? "none" : currentVersion)) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "El estado cambió en el servidor");
+		}
+		return save(state);
 	}
 
 	public synchronized List<MemberProfile> members() {

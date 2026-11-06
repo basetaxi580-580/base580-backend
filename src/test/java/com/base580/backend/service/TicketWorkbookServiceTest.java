@@ -106,4 +106,32 @@ class TicketWorkbookServiceTest {
 		assertThrows(IllegalArgumentException.class, () -> service.save(request(null, Map.of("NORTE 26!A0", "1"))));
 		verify(repository, never()).save(any());
 	}
+
+	@Test
+	void guardaFormatosJuntoConCapturas() {
+		when(repository.findById(TicketWorkbookDocument.DEFAULT_ID)).thenReturn(Optional.empty());
+		when(repository.save(any())).thenAnswer(invocation -> {
+			TicketWorkbookDocument document = invocation.getArgument(0);
+			document.setVersion(0L);
+			return document;
+		});
+
+		TicketWorkbookState request = new TicketWorkbookState(new LinkedHashMap<>(), null, null);
+		Map<String, String> formatos = new LinkedHashMap<>();
+		formatos.put("NORTE 26!A3", "{\"b\":true,\"sz\":14}");
+		request.setFormatos(formatos);
+
+		TicketWorkbookState saved = service.save(request);
+
+		assertEquals("{\"b\":true,\"sz\":14}", saved.getFormatos().get("NORTE 26!A3"));
+	}
+
+	@Test
+	void rechazaFormatoConCeldaInvalida() {
+		TicketWorkbookState request = new TicketWorkbookState(new LinkedHashMap<>(), null, null);
+		request.setFormatos(Map.of("sin-referencia", "{}"));
+
+		assertThrows(IllegalArgumentException.class, () -> service.save(request));
+		verify(repository, never()).save(any());
+	}
 }

@@ -24,6 +24,8 @@ public class TicketWorkbookDocument {
 	private Long version;
 
 	private List<Captura> capturas = new ArrayList<>();
+	private List<Formato> formatos = new ArrayList<>();
+	private String estructura;
 	private String actualizado;
 
 	public String getId() {
@@ -48,6 +50,22 @@ public class TicketWorkbookDocument {
 
 	public void setCapturas(List<Captura> capturas) {
 		this.capturas = capturas;
+	}
+
+	public List<Formato> getFormatos() {
+		return formatos;
+	}
+
+	public void setFormatos(List<Formato> formatos) {
+		this.formatos = formatos;
+	}
+
+	public String getEstructura() {
+		return estructura;
+	}
+
+	public void setEstructura(String estructura) {
+		this.estructura = estructura;
 	}
 
 	public String getActualizado() {
@@ -85,6 +103,36 @@ public class TicketWorkbookDocument {
 
 		public void setValor(String valor) {
 			this.valor = valor;
+		}
+	}
+
+	/** Formato aplicado por el usuario a una celda: `celda` = "Hoja!A1", `estilo` = JSON del estilo parcial. */
+	public static class Formato {
+		private String celda;
+		private String estilo;
+
+		public Formato() {
+		}
+
+		public Formato(String celda, String estilo) {
+			this.celda = celda;
+			this.estilo = estilo;
+		}
+
+		public String getCelda() {
+			return celda;
+		}
+
+		public void setCelda(String celda) {
+			this.celda = celda;
+		}
+
+		public String getEstilo() {
+			return estilo;
+		}
+
+		public void setEstilo(String estilo) {
+			this.estilo = estilo;
 		}
 	}
 }

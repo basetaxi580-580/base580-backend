@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.springframework.dao.DuplicateKeyException;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import com.base580.backend.model.TicketWorkbookDocument;
 import com.base580.backend.model.TicketWorkbookDocument.Captura;
 import com.base580.backend.model.TicketWorkbookDocument.Formato;
+import com.base580.backend.model.TicketWorkbookDocument.PestanaPersonalizada;
 import com.base580.backend.model.TicketWorkbookState;
 import com.base580.backend.repository.TicketWorkbookRepository;
 
@@ -32,6 +34,10 @@ public class TicketWorkbookService {
 	static final int MAX_VALOR = 500;
 	static final int MAX_ESTILO = 1_000;
 	static final int MAX_ESTRUCTURA = 50_000;
+	static final int MAX_PESTANAS = 100;
+	static final int MAX_NOMBRE_PESTANA = 64;
+	private static final Pattern ID_PESTANA = Pattern.compile("^[A-Za-z0-9_-]{1,64}$");
+	private static final Set<String> HOJAS_IMPORTADAS = Set.of("BASE NTE 25", "BASE NTE 26", "BASE NORTE ESPECIALES", "BASE TAPO 24", "BASE TAPO 25", "BASE TAPO REZ", "BASE PTE 25", "BASE PTE", "BASE SUR 25", "BASE SUR 26", "TAPO 25", "NORTE 25", "NORTE 26", "NORTE ESPECIALES", "PTE", "SUR 25", "SUR 26", "MANUALES", "TOTAL");
 	private static final Pattern CELDA = Pattern.compile("^[^!]{1,64}![A-Z]{1,3}[1-9][0-9]{0,5}$");
 
 	private final TicketWorkbookRepository repository;
@@ -50,6 +56,8 @@ public class TicketWorkbookService {
 		}
 		List<Captura> capturas = validar(request.getCapturas());
 		List<Formato> formatos = validarFormatos(request.getFormatos());
+		List<PestanaPersonalizada> pestanas = validarPestanas(request.getPestanasPersonalizadas());
+		List<String> orden = validarOrden(request.getOrdenPestanas());
 		Optional<TicketWorkbookDocument> actual = repository.findById(TicketWorkbookDocument.DEFAULT_ID);
 		TicketWorkbookDocument document;
 		if (actual.isEmpty()) {
@@ -66,6 +74,8 @@ public class TicketWorkbookService {
 		}
 		document.setCapturas(capturas);
 		document.setFormatos(formatos);
+		document.setPestanasPersonalizadas(pestanas);
+		document.setOrdenPestanas(orden);
 		document.setEstructura(validarEstructura(request.getEstructura()));
 		document.setActualizado(OffsetDateTime.now().toString());
 		try {
@@ -129,6 +139,39 @@ public class TicketWorkbookService {
 		return estructura;
 	}
 
+	static List<PestanaPersonalizada> validarPestanas(List<PestanaPersonalizada> pestanas) {
+		List<PestanaPersonalizada> lista = new ArrayList<>();
+		if (pestanas == null) return lista;
+		if (pestanas.size() > MAX_PESTANAS) throw new IllegalArgumentException("Demasiadas pestañas personalizadas.");
+		java.util.Set<String> ids = new java.util.HashSet<>();
+		java.util.Set<String> nombres = new java.util.HashSet<>();
+		for (PestanaPersonalizada pestana : pestanas) {
+			String id = pestana == null ? null : pestana.getId();
+			String nombre = pestana == null ? null : pestana.getNombre();
+			if (id == null || !ID_PESTANA.matcher(id).matches()) throw new IllegalArgumentException("Identificador de pestaña inválido.");
+			if (nombre == null || nombre.isBlank() || nombre.length() > MAX_NOMBRE_PESTANA || nombre.contains("!")) throw new IllegalArgumentException("Nombre de pestaña inválido.");
+			String clave = nombre.trim().toUpperCase(java.util.Locale.ROOT);
+			if (HOJAS_IMPORTADAS.contains(clave)) throw new IllegalArgumentException("No se puede usar el nombre de una hoja importada.");
+			if (!ids.add(id) || !nombres.add(clave)) throw new IllegalArgumentException("Las pestañas deben tener identificador y nombre únicos.");
+			lista.add(new PestanaPersonalizada(id, nombre.trim()));
+		}
+		return lista;
+	}
+
+	static List<String> validarOrden(List<String> orden) {
+		List<String> lista = new ArrayList<>();
+		if (orden == null) return lista;
+		if (orden.size() > MAX_PESTANAS) throw new IllegalArgumentException("Demasiadas pestañas en el orden.");
+		Set<String> nombres = new java.util.HashSet<>();
+		for (String nombre : orden) {
+			if (nombre == null || nombre.isBlank() || nombre.length() > MAX_NOMBRE_PESTANA || nombre.contains("!")) throw new IllegalArgumentException("Nombre de orden inválido.");
+			String limpio = nombre.trim();
+			if (!nombres.add(limpio.toUpperCase(java.util.Locale.ROOT))) throw new IllegalArgumentException("El orden contiene pestañas repetidas.");
+			lista.add(limpio);
+		}
+		return lista;
+	}
+
 	static TicketWorkbookState toState(TicketWorkbookDocument document) {
 		Map<String, String> capturas = new LinkedHashMap<>();
 		if (document.getCapturas() != null) {
@@ -145,6 +188,8 @@ public class TicketWorkbookService {
 		TicketWorkbookState state = new TicketWorkbookState(capturas, document.getVersion(), document.getActualizado());
 		state.setFormatos(formatos);
 		state.setEstructura(document.getEstructura());
+		state.setPestanasPersonalizadas(document.getPestanasPersonalizadas() == null ? new ArrayList<>() : new ArrayList<>(document.getPestanasPersonalizadas()));
+		state.setOrdenPestanas(document.getOrdenPestanas() == null ? new ArrayList<>() : new ArrayList<>(document.getOrdenPestanas()));
 		return state;
 	}
 

@@ -57,6 +57,7 @@ public class TicketWorkbookService {
 		List<Captura> capturas = validar(request.getCapturas());
 		List<Formato> formatos = validarFormatos(request.getFormatos());
 		List<PestanaPersonalizada> pestanas = validarPestanas(request.getPestanasPersonalizadas());
+		List<String> orden = validarOrden(request.getOrdenPestanas());
 		Optional<TicketWorkbookDocument> actual = repository.findById(TicketWorkbookDocument.DEFAULT_ID);
 		TicketWorkbookDocument document;
 		if (actual.isEmpty()) {
@@ -74,6 +75,7 @@ public class TicketWorkbookService {
 		document.setCapturas(capturas);
 		document.setFormatos(formatos);
 		document.setPestanasPersonalizadas(pestanas);
+		document.setOrdenPestanas(orden);
 		document.setEstructura(validarEstructura(request.getEstructura()));
 		document.setActualizado(OffsetDateTime.now().toString());
 		try {
@@ -156,6 +158,20 @@ public class TicketWorkbookService {
 		return lista;
 	}
 
+	static List<String> validarOrden(List<String> orden) {
+		List<String> lista = new ArrayList<>();
+		if (orden == null) return lista;
+		if (orden.size() > MAX_PESTANAS) throw new IllegalArgumentException("Demasiadas pestañas en el orden.");
+		Set<String> nombres = new java.util.HashSet<>();
+		for (String nombre : orden) {
+			if (nombre == null || nombre.isBlank() || nombre.length() > MAX_NOMBRE_PESTANA || nombre.contains("!")) throw new IllegalArgumentException("Nombre de orden inválido.");
+			String limpio = nombre.trim();
+			if (!nombres.add(limpio.toUpperCase(java.util.Locale.ROOT))) throw new IllegalArgumentException("El orden contiene pestañas repetidas.");
+			lista.add(limpio);
+		}
+		return lista;
+	}
+
 	static TicketWorkbookState toState(TicketWorkbookDocument document) {
 		Map<String, String> capturas = new LinkedHashMap<>();
 		if (document.getCapturas() != null) {
@@ -173,6 +189,7 @@ public class TicketWorkbookService {
 		state.setFormatos(formatos);
 		state.setEstructura(document.getEstructura());
 		state.setPestanasPersonalizadas(document.getPestanasPersonalizadas() == null ? new ArrayList<>() : new ArrayList<>(document.getPestanasPersonalizadas()));
+		state.setOrdenPestanas(document.getOrdenPestanas() == null ? new ArrayList<>() : new ArrayList<>(document.getOrdenPestanas()));
 		return state;
 	}
 

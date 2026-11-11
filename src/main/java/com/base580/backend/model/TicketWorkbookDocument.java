@@ -26,6 +26,7 @@ public class TicketWorkbookDocument {
 	private List<Captura> capturas = new ArrayList<>();
 	private List<Formato> formatos = new ArrayList<>();
 	private List<PestanaPersonalizada> pestanasPersonalizadas = new ArrayList<>();
+	private List<String> ordenPestanas = new ArrayList<>();
 	private String estructura;
 	private String actualizado;
 
@@ -68,6 +69,9 @@ public class TicketWorkbookDocument {
 	public void setPestanasPersonalizadas(List<PestanaPersonalizada> pestanasPersonalizadas) {
 		this.pestanasPersonalizadas = pestanasPersonalizadas;
 	}
+
+	public List<String> getOrdenPestanas() { return ordenPestanas; }
+	public void setOrdenPestanas(List<String> ordenPestanas) { this.ordenPestanas = ordenPestanas; }
 
 	public String getEstructura() {
 		return estructura;

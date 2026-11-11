@@ -8,6 +8,7 @@ public class TicketWorkbookState {
 
 	private Map<String, String> capturas = new LinkedHashMap<>();
 	private Map<String, String> formatos = new LinkedHashMap<>();
+	private java.util.List<TicketWorkbookDocument.PestanaPersonalizada> pestanasPersonalizadas = new java.util.ArrayList<>();
 	private String estructura;
 	private Long version;
 	private String actualizado;
@@ -35,6 +36,14 @@ public class TicketWorkbookState {
 
 	public void setFormatos(Map<String, String> formatos) {
 		this.formatos = formatos;
+	}
+
+	public java.util.List<TicketWorkbookDocument.PestanaPersonalizada> getPestanasPersonalizadas() {
+		return pestanasPersonalizadas;
+	}
+
+	public void setPestanasPersonalizadas(java.util.List<TicketWorkbookDocument.PestanaPersonalizada> pestanasPersonalizadas) {
+		this.pestanasPersonalizadas = pestanasPersonalizadas;
 	}
 
 	public String getEstructura() {

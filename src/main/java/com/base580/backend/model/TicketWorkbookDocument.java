@@ -25,6 +25,7 @@ public class TicketWorkbookDocument {
 
 	private List<Captura> capturas = new ArrayList<>();
 	private List<Formato> formatos = new ArrayList<>();
+	private List<PestanaPersonalizada> pestanasPersonalizadas = new ArrayList<>();
 	private String estructura;
 	private String actualizado;
 
@@ -58,6 +59,14 @@ public class TicketWorkbookDocument {
 
 	public void setFormatos(List<Formato> formatos) {
 		this.formatos = formatos;
+	}
+
+	public List<PestanaPersonalizada> getPestanasPersonalizadas() {
+		return pestanasPersonalizadas;
+	}
+
+	public void setPestanasPersonalizadas(List<PestanaPersonalizada> pestanasPersonalizadas) {
+		this.pestanasPersonalizadas = pestanasPersonalizadas;
 	}
 
 	public String getEstructura() {
@@ -134,5 +143,24 @@ public class TicketWorkbookDocument {
 		public void setEstilo(String estilo) {
 			this.estilo = estilo;
 		}
+	}
+
+	/** Pestaña BASE creada por el usuario; el id no cambia al renombrarla. */
+	public static class PestanaPersonalizada {
+		private String id;
+		private String nombre;
+
+		public PestanaPersonalizada() {
+		}
+
+		public PestanaPersonalizada(String id, String nombre) {
+			this.id = id;
+			this.nombre = nombre;
+		}
+
+		public String getId() { return id; }
+		public void setId(String id) { this.id = id; }
+		public String getNombre() { return nombre; }
+		public void setNombre(String nombre) { this.nombre = nombre; }
 	}
 }

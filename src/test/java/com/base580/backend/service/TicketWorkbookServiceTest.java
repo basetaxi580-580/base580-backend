@@ -23,6 +23,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 
 import com.base580.backend.model.TicketWorkbookDocument;
 import com.base580.backend.model.TicketWorkbookDocument.Captura;
+import com.base580.backend.model.TicketWorkbookDocument.PestanaPersonalizada;
 import com.base580.backend.model.TicketWorkbookState;
 import com.base580.backend.repository.TicketWorkbookRepository;
 
@@ -133,5 +134,46 @@ class TicketWorkbookServiceTest {
 
 		assertThrows(IllegalArgumentException.class, () -> service.save(request));
 		verify(repository, never()).save(any());
+	}
+
+	@Test
+	void documentoExistenteSinPestanasSigueSiendoCompatible() {
+		TicketWorkbookDocument document = stored(2L, "NORTE 26!A3", "5");
+		when(repository.findById(TicketWorkbookDocument.DEFAULT_ID)).thenReturn(Optional.of(document));
+
+		TicketWorkbookState state = service.get();
+
+		assertTrue(state.getPestanasPersonalizadas().isEmpty());
+	}
+
+	@Test
+	void guardaYLeePestanasPersonalizadas() {
+		when(repository.findById(TicketWorkbookDocument.DEFAULT_ID)).thenReturn(Optional.empty());
+		when(repository.save(any())).thenAnswer(invocation -> {
+			TicketWorkbookDocument document = invocation.getArgument(0);
+			document.setVersion(0L);
+			return document;
+		});
+		TicketWorkbookState request = request(null, Map.of());
+		request.setPestanasPersonalizadas(List.of(new PestanaPersonalizada("base-1", "BASE NUEVA")));
+
+		TicketWorkbookState saved = service.save(request);
+
+		assertEquals("base-1", saved.getPestanasPersonalizadas().get(0).getId());
+		assertEquals("BASE NUEVA", saved.getPestanasPersonalizadas().get(0).getNombre());
+	}
+
+	@Test
+	void rechazaNombreDuplicadoVacioONombreConExclamacion() {
+		assertThrows(IllegalArgumentException.class, () -> service.save(stateWithPestanas(new PestanaPersonalizada("a", "BASE X"), new PestanaPersonalizada("b", "base x"))));
+		assertThrows(IllegalArgumentException.class, () -> service.save(stateWithPestanas(new PestanaPersonalizada("a", " "))));
+		assertThrows(IllegalArgumentException.class, () -> service.save(stateWithPestanas(new PestanaPersonalizada("a", "BASE!X"))));
+		verify(repository, never()).save(any());
+	}
+
+	private static TicketWorkbookState stateWithPestanas(PestanaPersonalizada... pestanas) {
+		TicketWorkbookState state = request(null, Map.of());
+		state.setPestanasPersonalizadas(List.of(pestanas));
+		return state;
 	}
 }
